@@ -4,6 +4,9 @@ macro(configure_project)
 	# features
 	eth_default_option(COVERAGE OFF)
 
+	# guomi
+	eth_default_option(BUILD_GM OFF)
+
 	# components
 	eth_default_option(TESTS ON)
 	eth_default_option(TOOLS ON)
@@ -29,6 +32,9 @@ macro(print_config NAME)
 	message("--------------------------------------------------------------- features")
 	message("-- COVERAGE         Coverage support                         ${COVERAGE}")
 	message("------------------------------------------------------------- components")
+if (SUPPORT_BUILD_GM)
+	message("-- BUILD_GM          BUILD GM                            ${BUILD_GM}")
+endif()
 if (SUPPORT_TESTS)
 	message("-- TESTS            Build tests                              ${TESTS}")
 endif()
