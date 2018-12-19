@@ -202,7 +202,11 @@ static void version()
 	sout() <<
 		"solc, the solidity compiler commandline interface" <<
 		endl <<
+#if FISCO_GM
+		"Gm version: " <<
+#else
 		"Version: " <<
+#endif
 		dev::solidity::VersionString <<
 		endl;
 	exit(0);
