@@ -6,6 +6,9 @@ macro(configure_project)
 
 	# guomi
 	eth_default_option(BUILD_GM OFF)
+	if (BUILD_GM)
+        add_definitions(-DFISCO_GM)
+    endif()
 
 	# components
 	eth_default_option(TESTS ON)

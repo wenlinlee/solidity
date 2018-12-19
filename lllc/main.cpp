@@ -58,7 +58,11 @@ static void help()
 static void version()
 {
 	cout << "LLLC, the Lovely Little Language Compiler" << endl;
+#if FISCO_GM
+	cout << "Gm version: " << VersionString << endl;
+#else
 	cout << "Version: " << VersionString << endl;
+#endif
 	exit(0);
 }
 
