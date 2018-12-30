@@ -3,6 +3,12 @@ macro(configure_project)
 
 	# features
 	eth_default_option(PROFILING OFF)
+	if (BUILD_GM)
+		add_definitions(-DFISCO_GM)
+	endif()
+
+	# guomi
+	eth_default_option(BUILD_GM OFF)
 
 	# components
 	eth_default_option(TESTS ON)
@@ -29,6 +35,10 @@ macro(print_config NAME)
 	message("--------------------------------------------------------------- features")
 	message("-- PROFILING        Profiling support                        ${PROFILING}")
 	message("------------------------------------------------------------- components")
+if (BUILD_GM)
+	message("-- BUILD_GM          BUILD GM                                ${BUILD_GM}")
+	message("------------------------------------------------------------------------")	
+endif()
 if (SUPPORT_TESTS)
 	message("-- TESTS            Build tests                              ${TESTS}")
 endif()
