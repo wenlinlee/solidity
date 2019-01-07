@@ -79,17 +79,17 @@ ORIGIN,              ///< get execution origination address
 
 > **普通版fisco-solc** 
 
-CentOs： [fisco-solc-centos](https://github.com/FISCO-BCOS/fisco-solc/raw/master/fisco-solc-centos) 
+CentOs： [fisco-solc-centos](https://github.com/FISCO-BCOS/solidity/releases/download/release-1.3/solc-centos) 
 
-Ubuntu：[fisco-solc-ubuntu](https://github.com/FISCO-BCOS/fisco-solc/raw/master/fisco-solc-ubuntu)
+Ubuntu：[fisco-solc-ubuntu](https://github.com/FISCO-BCOS/solidity/releases/download/release-1.3/solc-ubuntu)
 
 <br>
 
 > **国密版fisco-solc**
 
-CentOs: [fisco-solc-guomi-centos](https://github.com/FISCO-BCOS/fisco-solc/raw/master/fisco-solc-guomi-centos)
+CentOs: [fisco-solc-guomi-centos](https://github.com/FISCO-BCOS/solidity/releases/download/release-1.3/solc-gm-centos)
 
-Ubuntu: [fisco-solc-guomi-ubuntu](https://github.com/FISCO-BCOS/fisco-solc/raw/master/fisco-solc-guomi-ubuntu)
+Ubuntu: [fisco-solc-guomi-ubuntu](https://github.com/FISCO-BCOS/solidity/releases/download/release-1.3/solc-gm-ubuntu)
 
 
 > **重命名**
