@@ -38,10 +38,6 @@ namespace langutil
  */
 struct SourceLocation
 {
-	SourceLocation(): start(-1), end(-1), source{nullptr} { }
-	SourceLocation(int _start, int _end, std::shared_ptr<CharStream> _source):
-		start(_start), end(_end), source{std::move(_source)} { }
-
 	bool operator==(SourceLocation const& _other) const
 	{
 		return source.get() == _other.source.get() && start == _other.start && end == _other.end;
@@ -53,8 +49,28 @@ struct SourceLocation
 
 	bool isEmpty() const { return start == -1 && end == -1; }
 
-	int start;
-	int end;
+	/// @returns the smallest SourceLocation that contains both @param _a and @param _b.
+	/// Assumes that @param _a and @param _b refer to the same source (exception: if the source of either one
+	/// is unset, the source of the other will be used for the result, even if that is unset as well).
+	/// Invalid start and end positions (with value of -1) are ignored (if start or end are -1 for both @param _a and
+	/// @param _b, then start resp. end of the result will be -1 as well).
+	static SourceLocation smallestCovering(SourceLocation _a, SourceLocation const& _b)
+	{
+		if (!_a.source)
+			_a.source = _b.source;
+
+		if (_a.start < 0)
+			_a.start = _b.start;
+		else if (_b.start >= 0 && _b.start < _a.start)
+			_a.start = _b.start;
+		if (_b.end > _a.end)
+			_a.end = _b.end;
+
+		return _a;
+	}
+
+	int start = -1;
+	int end = -1;
 	std::shared_ptr<CharStream> source;
 };
 

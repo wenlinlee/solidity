@@ -224,9 +224,9 @@ for displaying the current position in the source code inside a debugger
 or for breakpoint handling.
 
 Both kinds of source mappings use integer identifiers to refer to source files.
-These are regular array indices into a list of source files usually called
-``"sourceList"``, which is part of the combined-json and the output of
-the json / npm compiler.
+The identifier of a source file is stored in
+``output['sources'][sourceName]['id']`` where ``output`` is the output of the
+standard-json compiler interface parsed as JSON.
 
 .. note ::
     In the case of instructions that are not associated with any particular source file,
@@ -385,6 +385,8 @@ Global Variables
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
 - ``<address payable>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`, returns ``false`` on failure
 - ``<address payable>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
+- ``type(C).creationCode`` (``bytes memory``): creation bytecode of the given contract, see :ref:`Type Information<meta-type>`.
+- ``type(C).runtimeCode`` (``bytes memory``): runtime bytecode of the given contract, see :ref:`Type Information<meta-type>`.
 
 .. note::
     Do not rely on ``block.timestamp``, ``now`` and ``blockhash`` as a source of randomness,
@@ -445,7 +447,7 @@ These keywords are reserved in Solidity. They might become part of the syntax in
 ``abstract``, ``after``, ``alias``, ``apply``, ``auto``, ``case``, ``catch``, ``copyof``, ``default``,
 ``define``, ``final``, ``immutable``, ``implements``, ``in``, ``inline``, ``let``, ``macro``, ``match``,
 ``mutable``, ``null``, ``of``, ``override``, ``partial``, ``promise``, ``reference``, ``relocatable``,
-``sealed``, ``sizeof``, ``static``, ``supports``, ``switch``, ``try``, ``type``, ``typedef``, ``typeof``,
+``sealed``, ``sizeof``, ``static``, ``supports``, ``switch``, ``try``, ``typedef``, ``typeof``,
 ``unchecked``.
 
 Language Grammar

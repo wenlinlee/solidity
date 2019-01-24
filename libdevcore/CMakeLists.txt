@@ -1,18 +1,55 @@
+
+if(BUILD_GM)
 set(sources
 	CommonData.cpp
 	CommonIO.cpp
 	Exceptions.cpp
 	IndentedWriter.cpp
 	JSON.cpp
-	Keccak256.cpp
+	GmHash.cpp
 	StringUtils.cpp
 	SwarmHash.cpp
 	UTF8.cpp
 	Whiskers.cpp
+)	
+else()
+set(sources
+	Algorithms.h
+	Assertions.h
+	Common.h
+	CommonData.cpp
+	CommonData.h
+	CommonIO.cpp
+	CommonIO.h
+	Exceptions.cpp
+	Exceptions.h
+	FixedHash.h
+	IndentedWriter.cpp
+	IndentedWriter.h
+	JSON.cpp
+	JSON.h
+	Keccak256.cpp
+	Keccak256.h
+	Result.h
+	StringUtils.cpp
+	StringUtils.h
+	SwarmHash.cpp
+	SwarmHash.h
+	UTF8.cpp
+	UTF8.h
+	vector_ref.h
+	Visitor.h
+	Whiskers.cpp
+	Whiskers.h
 )
+endif()
+if(BUILD_GM)
+	aux_source_directory(./sm3 sources)
+	include_directories(./sm3)
+endif()
 
 add_library(devcore ${sources})
-target_link_libraries(devcore PRIVATE jsoncpp ${Boost_FILESYSTEM_LIBRARIES} ${Boost_REGEX_LIBRARIES} ${Boost_SYSTEM_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(devcore PUBLIC jsoncpp ${Boost_FILESYSTEM_LIBRARIES} ${Boost_REGEX_LIBRARIES} ${Boost_SYSTEM_LIBRARIES} Threads::Threads)
 target_include_directories(devcore PUBLIC "${CMAKE_SOURCE_DIR}")
 target_include_directories(devcore SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
 add_dependencies(devcore solidity_BuildInfo.h)

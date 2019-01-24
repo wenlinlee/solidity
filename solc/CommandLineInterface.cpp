@@ -202,7 +202,11 @@ static void version()
 	sout() <<
 		"solc, the solidity compiler commandline interface" <<
 		endl <<
+#if FISCO_GM
+		"Gm version: " <<
+#else
 		"Version: " <<
+#endif
 		dev::solidity::VersionString <<
 		endl;
 	exit(0);
@@ -731,7 +735,7 @@ bool CommandLineInterface::processInput()
 		try
 		{
 			auto path = boost::filesystem::path(_path);
-			auto canonicalPath = weaklyCanonicalFilesystemPath(path);
+			auto canonicalPath = boost::filesystem::weakly_canonical(path);
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
@@ -858,8 +862,7 @@ bool CommandLineInterface::processInput()
 
 	m_compiler.reset(new CompilerStack(fileReader));
 
-	auto scannerFromSourceName = [&](string const& _sourceName) -> Scanner const& { return m_compiler->scanner(_sourceName); };
-	SourceReferenceFormatter formatter(serr(false), scannerFromSourceName);
+	SourceReferenceFormatter formatter(serr(false));
 
 	try
 	{
@@ -1222,8 +1225,7 @@ bool CommandLineInterface::assemble(
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
-		auto scannerFromSourceName = [&](string const&) -> Scanner const& { return stack.scanner(); };
-		SourceReferenceFormatter formatter(serr(false), scannerFromSourceName);
+		SourceReferenceFormatter formatter(serr(false));
 
 		for (auto const& error: stack.errors())
 		{

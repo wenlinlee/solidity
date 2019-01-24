@@ -26,6 +26,7 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <liblangutil/ErrorReporter.h>
 
@@ -33,8 +34,8 @@
 #include <libdevcore/StringUtils.h>
 
 #include <boost/algorithm/cxx11/all_of.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <memory>
 #include <vector>
@@ -198,12 +199,44 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 	return components;
 }
 
+TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(FunctionCall const& _functionCall)
+{
+	vector<ASTPointer<Expression const>> arguments = _functionCall.arguments();
+	if (arguments.size() != 1)
+	{
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"This function takes one argument, but " +
+			toString(arguments.size()) +
+			" were provided."
+		);
+		return {};
+	}
+	TypePointer firstArgType = type(*arguments.front());
+	if (
+		firstArgType->category() != Type::Category::TypeType ||
+		dynamic_cast<TypeType const&>(*firstArgType).actualType()->category() != TypeType::Category::Contract
+	)
+	{
+		m_errorReporter.typeError(
+			arguments.front()->location(),
+			"Invalid type for argument in function call. "
+			"Contract type required, but " +
+			type(*arguments.front())->toString(true) +
+			" provided."
+		);
+		return {};
+	}
+
+	return {MagicType::metaType(dynamic_cast<TypeType const&>(*firstArgType).actualType())};
+}
+
 void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 {
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
 	solAssert(base, "Base contract not available.");
 
-	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+	if (m_scope->isInterface())
 		m_errorReporter.typeError(_inheritance.location(), "Interfaces cannot inherit.");
 
 	if (base->isLibrary())
@@ -211,7 +244,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 
 	auto const& arguments = _inheritance.arguments();
 	TypePointers parameterTypes;
-	if (base->contractKind() != ContractDefinition::ContractKind::Interface)
+	if (!base->isInterface())
 		// Interfaces do not have constructors, so there are zero parameters.
 		parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
 
@@ -298,33 +331,50 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (!_function.isConstructor() && !_function.isFallback() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(_function.location(), "Internal functions cannot be payable.");
 	}
-	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
-	{
-		if (type(*var)->category() == Type::Category::Mapping)
+	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& var) {
+		if (type(var)->category() == Type::Category::Mapping)
 		{
-			if (!type(*var)->dataStoredIn(DataLocation::Storage))
-				m_errorReporter.typeError(var->location(), "Mapping types can only have a data location of \"storage\"." );
+			if (!type(var)->dataStoredIn(DataLocation::Storage))
+				m_errorReporter.typeError(var.location(), "Mapping types can only have a data location of \"storage\"." );
 			else if (!isLibraryFunction && _function.isPublic())
-				m_errorReporter.typeError(var->location(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
+				m_errorReporter.typeError(var.location(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
 		}
 		else
 		{
-			if (!type(*var)->canLiveOutsideStorage() && _function.isPublic())
-				m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
-			if (_function.isPublic() && !(type(*var)->interfaceType(isLibraryFunction)))
-				m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
+			if (!type(var)->canLiveOutsideStorage() && _function.isPublic())
+				m_errorReporter.typeError(var.location(), "Type is required to live outside storage.");
+			if (_function.isPublic() && !(type(var)->interfaceType(isLibraryFunction)))
+				m_errorReporter.fatalTypeError(var.location(), "Internal or recursive type is not allowed for public or external functions.");
 		}
 		if (
 			_function.isPublic() &&
 			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
-			!typeSupportedByOldABIEncoder(*type(*var))
+			!typeSupportedByOldABIEncoder(*type(var))
 		)
 			m_errorReporter.typeError(
-				var->location(),
+				var.location(),
 				"This type is only supported in the new experimental ABI encoder. "
 				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
 			);
+	};
+	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
+	{
+		TypePointer baseType = type(*var);
+		while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
+			baseType = arrayType->baseType();
 
+		if (
+			!m_scope->isInterface() &&
+			baseType->category() == Type::Category::Struct &&
+			baseType->dataStoredIn(DataLocation::CallData)
+		)
+			m_errorReporter.typeError(var->location(), "Calldata structs are not yet supported.");
+		checkArgumentAndReturnParameter(*var);
+		var->accept(*this);
+	}
+	for (ASTPointer<VariableDeclaration> const& var: _function.returnParameters())
+	{
+		checkArgumentAndReturnParameter(*var);
 		var->accept(*this);
 	}
 	set<Declaration const*> modifiers;
@@ -345,7 +395,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		else
 			modifiers.insert(decl);
 	}
-	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+	if (m_scope->isInterface())
 	{
 		if (_function.isImplemented())
 			m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
@@ -374,7 +424,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	// * a function's input/output parameters,
 	// * or inside of a struct definition.
 	if (
-		m_scope->contractKind() == ContractDefinition::ContractKind::Interface
+		m_scope->isInterface()
 		&& !_variable.isCallableParameter()
 		&& !m_insideStruct
 	)
@@ -658,7 +708,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		m_errorReporter,
 		m_evmVersion,
 		Error::Type::SyntaxError,
-		yul::AsmFlavour::Loose,
+		yul::EVMDialect::looseAssemblyForEVM(),
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations()))
@@ -935,30 +985,32 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			var.accept(*this);
 			if (!valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type))
 			{
+				auto errorMsg = "Type " +
+					valueComponentType->toString() +
+					" is not implicitly convertible to expected type " +
+					var.annotation().type->toString();
 				if (
 					valueComponentType->category() == Type::Category::RationalNumber &&
 					dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional() &&
 					valueComponentType->mobileType()
 				)
-					m_errorReporter.typeError(
-						_statement.location(),
-						"Type " +
-						valueComponentType->toString() +
-						" is not implicitly convertible to expected type " +
-						var.annotation().type->toString() +
-						". Try converting to type " +
-						valueComponentType->mobileType()->toString() +
-						" or use an explicit conversion."
-					);
+				{
+					if (var.annotation().type->operator==(*valueComponentType->mobileType()))
+						m_errorReporter.typeError(
+							_statement.location(),
+							errorMsg + ", but it can be explicitly converted."
+						);
+					else
+						m_errorReporter.typeError(
+							_statement.location(),
+							errorMsg +
+							". Try converting to type " +
+							valueComponentType->mobileType()->toString() +
+							" or use an explicit conversion."
+						);
+				}
 				else
-					m_errorReporter.typeError(
-						_statement.location(),
-						"Type " +
-						valueComponentType->toString() +
-						" is not implicitly convertible to expected type " +
-						var.annotation().type->toString() +
-						"."
-					);
+					m_errorReporter.typeError(_statement.location(), errorMsg + ".");
 			}
 		}
 	}
@@ -1252,7 +1304,8 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 {
 	TypePointer const& leftType = type(_operation.leftExpression());
 	TypePointer const& rightType = type(_operation.rightExpression());
-	TypePointer commonType = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
+	TypeResult result = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
+	TypePointer commonType = result.get();
 	if (!commonType)
 	{
 		m_errorReporter.typeError(
@@ -1262,7 +1315,8 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			" not compatible with types " +
 			leftType->toString() +
 			" and " +
-			rightType->toString()
+			rightType->toString() +
+			(!result.message().empty() ? ". " + result.message() : "")
 		);
 		commonType = leftType;
 	}
@@ -1477,7 +1531,16 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 
 		if (argType->category() == Type::Category::RationalNumber)
 		{
-			if (!argType->mobileType())
+			auto const& rationalType = dynamic_cast<RationalNumberType const&>(*argType);
+			if (rationalType.isFractional())
+			{
+				m_errorReporter.typeError(
+					arguments[i]->location(),
+					"Fractional numbers cannot yet be encoded."
+				);
+				continue;
+			}
+			else if (!argType->mobileType())
 			{
 				m_errorReporter.typeError(
 					arguments[i]->location(),
@@ -1817,6 +1880,9 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			returnTypes = functionType->returnParameterTypes();
 			break;
 		}
+		case FunctionType::Kind::MetaType:
+			returnTypes = typeCheckMetaTypeFunctionAndRetrieveReturnType(_functionCall);
+			break;
 		default:
 		{
 			typeCheckFunctionCall(_functionCall, functionType);
@@ -1857,7 +1923,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 
 		if (!contract)
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
-		if (contract->contractKind() == ContractDefinition::ContractKind::Interface)
+		if (contract->isInterface())
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
 		if (!contract->annotation().unimplementedFunctions.empty())
 		{
@@ -2057,8 +2123,24 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		if (tt->actualType()->category() == Type::Category::Enum)
 			annotation.isPure = true;
 	if (auto magicType = dynamic_cast<MagicType const*>(exprType.get()))
+	{
 		if (magicType->kind() == MagicType::Kind::ABI)
 			annotation.isPure = true;
+		else if (magicType->kind() == MagicType::Kind::MetaType && (
+			memberName == "creationCode" || memberName == "runtimeCode"
+		))
+		{
+			annotation.isPure = true;
+			m_scope->annotation().contractDependencies.insert(
+				&dynamic_cast<ContractType const&>(*magicType->typeArgument()).contractDefinition()
+			);
+			if (contractDependenciesAreCyclic(*m_scope))
+				m_errorReporter.typeError(
+					_memberAccess.location(),
+					"Circular reference for contract code access."
+				);
+		}
+	}
 
 	return false;
 }
@@ -2329,30 +2411,32 @@ bool TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 	_expression.accept(*this);
 	if (!type(_expression)->isImplicitlyConvertibleTo(_expectedType))
 	{
+		auto errorMsg = "Type " +
+			type(_expression)->toString() +
+			" is not implicitly convertible to expected type " +
+			_expectedType.toString();
 		if (
 			type(_expression)->category() == Type::Category::RationalNumber &&
 			dynamic_pointer_cast<RationalNumberType const>(type(_expression))->isFractional() &&
 			type(_expression)->mobileType()
 		)
-			m_errorReporter.typeError(
-				_expression.location(),
-				"Type " +
-				type(_expression)->toString() +
-				" is not implicitly convertible to expected type " +
-				_expectedType.toString() +
-				". Try converting to type " +
-				type(_expression)->mobileType()->toString() +
-				" or use an explicit conversion."
-			);
+		{
+			if (_expectedType.operator==(*type(_expression)->mobileType()))
+				m_errorReporter.typeError(
+					_expression.location(),
+					errorMsg + ", but it can be explicitly converted."
+				);
+			else
+				m_errorReporter.typeError(
+					_expression.location(),
+					errorMsg +
+					". Try converting to type " +
+					type(_expression)->mobileType()->toString() +
+					" or use an explicit conversion."
+				);
+		}
 		else
-			m_errorReporter.typeError(
-				_expression.location(),
-				"Type " +
-				type(_expression)->toString() +
-				" is not implicitly convertible to expected type " +
-				_expectedType.toString() +
-				"."
-			);
+			m_errorReporter.typeError(_expression.location(), errorMsg + ".");
 		return false;
 	}
 	return true;

@@ -16,14 +16,10 @@
 */
 
 #include <libsolidity/analysis/ViewPureChecker.h>
-
-#include <libevmasm/SemanticInformation.h>
-
 #include <libsolidity/ast/ExperimentalFeatures.h>
 #include <libyul/AsmData.h>
-
 #include <liblangutil/ErrorReporter.h>
-
+#include <libevmasm/SemanticInformation.h>
 #include <functional>
 
 using namespace std;
@@ -156,6 +152,7 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 		m_bestMutabilityAndLocation.mutability < _funDef.stateMutability() &&
 		_funDef.stateMutability() != StateMutability::Payable &&
 		_funDef.isImplemented() &&
+		!_funDef.body().statements().empty() &&
 		!_funDef.isConstructor() &&
 		!_funDef.isFallback() &&
 		!_funDef.annotation().superFunction
@@ -341,7 +338,9 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 			{MagicType::Kind::ABI, "encodeWithSignature"},
 			{MagicType::Kind::Block, "blockhash"},
 			{MagicType::Kind::Message, "data"},
-			{MagicType::Kind::Message, "sig"}
+			{MagicType::Kind::Message, "sig"},
+			{MagicType::Kind::MetaType, "creationCode"},
+			{MagicType::Kind::MetaType, "runtimeCode"}
 		};
 		set<MagicMember> static const payableMembers{
 			{MagicType::Kind::Message, "value"}

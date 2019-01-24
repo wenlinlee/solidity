@@ -30,6 +30,7 @@ namespace yul
 {
 struct AsmAnalysisInfo;
 struct Block;
+struct Dialect;
 }
 
 namespace yul
@@ -57,13 +58,14 @@ private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
 	void disambiguate();
 
-	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors, langutil::Scanner const& _scanner);
+	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
 
 	std::string m_source;
 	bool m_yul = false;
 	std::string m_optimizerStep;
 	std::string m_expectation;
 
+	std::shared_ptr<Dialect> m_dialect;
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::string m_obtainedResult;

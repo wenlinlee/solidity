@@ -63,8 +63,8 @@ class NameCollector;
  * code of f, with replacements: a -> f_a, b -> f_b, c -> f_c
  * let z := f_c
  *
- * Prerequisites: Disambiguator, Function Hoister
- * More efficient if run after: Expression Splitter
+ * Prerequisites: Disambiguator
+ * More efficient if run after: Function Hoister, Expression Splitter
  */
 class FullInliner: public ASTModifier
 {
@@ -77,10 +77,21 @@ public:
 	/// @param _callSite the name of the function in which the function call is located.
 	bool shallInline(FunctionCall const& _funCall, YulString _callSite);
 
-	FunctionDefinition& function(YulString _name) { return *m_functions.at(_name); }
+	FunctionDefinition* function(YulString _name)
+	{
+		auto it = m_functions.find(_name);
+		if (it != m_functions.end())
+			return it->second;
+		return nullptr;
+	}
+
+	/// Adds the size of _funCall to the size of _callSite. This is just
+	/// a rough estimate that is done during inlining. The proper size
+	/// should be determined after inlining is completed.
+	void tentativelyUpdateCodeSize(YulString _function, YulString _callSite);
 
 private:
-	void updateCodeSize(FunctionDefinition& fun);
+	void updateCodeSize(FunctionDefinition const& _fun);
 	void handleBlock(YulString _currentFunctionName, Block& _block);
 
 	/// The AST to be modified. The root block itself will not be modified, because
@@ -88,7 +99,7 @@ private:
 	Block& m_ast;
 	std::map<YulString, FunctionDefinition*> m_functions;
 	/// Names of functions to always inline.
-	std::set<YulString> m_alwaysInline;
+	std::set<YulString> m_singleUse;
 	/// Variables that are constants (used for inlining heuristic)
 	std::set<YulString> m_constants;
 	std::map<YulString, size_t> m_functionSizes;
