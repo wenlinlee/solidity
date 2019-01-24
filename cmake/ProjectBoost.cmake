@@ -21,8 +21,8 @@ set(BOOST_CXXFLAGS "cxxflags=-fPIC")
 ExternalProject_Add(boost
     PREFIX ${CMAKE_SOURCE_DIR}/deps
     DOWNLOAD_NO_PROGRESS 1
-    URL https://github.com/ethereum/cpp-dependencies/releases/download/cache/boost_1_63_0.tar.gz
-    URL_HASH SHA256=fe34a4e119798e10b8cc9e565b3b0284e9fd3977ec8a1b19586ad1dec397088b
+    URL http://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.tar.bz2
+    URL_HASH SHA256=7f6130bc3cf65f56a618888ce9d5ea704fa10b462be126ad053e80e553d6d8b7
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ${BOOST_BOOTSTRAP_COMMAND}
     LOG_CONFIGURE 1
