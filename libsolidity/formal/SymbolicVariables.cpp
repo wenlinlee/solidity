@@ -18,7 +18,6 @@
 #include <libsolidity/formal/SymbolicVariables.h>
 
 #include <libsolidity/formal/SymbolicTypes.h>
-
 #include <libsolidity/ast/AST.h>
 
 using namespace std;
@@ -126,4 +125,14 @@ smt::Expression SymbolicFunctionVariable::increaseIndex()
 smt::Expression SymbolicFunctionVariable::operator()(vector<smt::Expression> _arguments) const
 {
 	return m_declaration(_arguments);
+}
+
+SymbolicMappingVariable::SymbolicMappingVariable(
+	TypePointer _type,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	SymbolicVariable(move(_type), _uniqueName, _interface)
+{
+	solAssert(isMapping(m_type->category()), "");
 }

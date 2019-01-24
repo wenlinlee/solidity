@@ -83,8 +83,8 @@ internally.
 
 .. note ::
 
-    Those working in a Windows environment wanting to run the above basic sets without aleth or libz3 in Git Bash, you would have to do: ``./build/test/RelWithDebInfo/soltest.exe -- --no-ipc --no-smt``.
-    If you're running this in plain Command Prompt, use ``.\build\test\RelWithDebInfo\soltest.exe -- --no-ipc --no-smt``.
+    Those working in a Windows environment wanting to run the above basic sets without aleth or libz3 in Git Bash, you would have to do: ``./build/test/Release/soltest.exe -- --no-ipc --no-smt``.
+    If you're running this in plain Command Prompt, use ``.\build\test\Release\soltest.exe -- --no-ipc --no-smt``.
 
 The option ``--no-smt`` disables the tests that require ``libz3`` and
 ``--no-ipc`` disables those that require ``aleth``.
@@ -112,7 +112,7 @@ For example, you could run the following command in your ``build`` folder:
    cmake -DCMAKE_BUILD_TYPE=Debug ..
    make
 
-This will create symbols such that when you debug a test using the ``--debug`` flag, you will have acecess to functions and varialbes in which you can break or print with.
+This will create symbols such that when you debug a test using the ``--debug`` flag, you will have access to functions and variables in which you can break or print with.
 
 
 The script ``./scripts/tests.sh`` also runs commandline tests and compilation tests

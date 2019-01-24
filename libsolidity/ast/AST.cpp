@@ -21,13 +21,12 @@
  */
 
 #include <libsolidity/ast/AST.h>
+
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
-
 #include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
-
 #include <algorithm>
 #include <functional>
 
@@ -137,6 +136,11 @@ bool ContractDefinition::constructorIsPublic() const
 {
 	FunctionDefinition const* f = constructor();
 	return !f || f->isPublic();
+}
+
+bool ContractDefinition::canBeDeployed() const
+{
+	return constructorIsPublic() && annotation().unimplementedFunctions.empty();
 }
 
 FunctionDefinition const* ContractDefinition::fallbackFunction() const

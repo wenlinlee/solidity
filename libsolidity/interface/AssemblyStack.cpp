@@ -23,20 +23,18 @@
 #include <libsolidity/interface/AssemblyStack.h>
 
 #include <libsolidity/codegen/AsmCodeGen.h>
-
+#include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
-#include <libyul/AsmPrinter.h>
-#include <libyul/AsmParser.h>
+
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/backends/evm/EVMObjectCompiler.h>
-#include <libyul/backends/evm/EVMCodeTransform.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmPrinter.h>
 #include <libyul/backends/evm/EVMAssembly.h>
+#include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/EVMObjectCompiler.h>
 #include <libyul/ObjectParser.h>
-
-#include <libevmasm/Assembly.h>
-
 #include <libyul/optimiser/Suite.h>
 
 using namespace std;
@@ -136,7 +134,7 @@ void AssemblyStack::optimize(yul::Object& _object)
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<yul::Object*>(subNode.get()))
 			optimize(*subObject);
-	yul::OptimiserSuite::run(*_object.code, *_object.analysisInfo);
+	yul::OptimiserSuite::run(*languageToDialect(m_language), *_object.code, *_object.analysisInfo);
 }
 
 MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) const

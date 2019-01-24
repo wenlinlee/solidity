@@ -20,14 +20,17 @@
  * Solidity parser.
  */
 
-#include <cctype>
-#include <vector>
 #include <libsolidity/parsing/Parser.h>
+
+#include <libsolidity/analysis/SemVerHandler.h>
+#include <libsolidity/interface/Version.h>
 #include <libyul/AsmParser.h>
 #include <libyul/backends/evm/EVMDialect.h>
-#include <liblangutil/SourceLocation.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
+#include <liblangutil/SourceLocation.h>
+#include <cctype>
+#include <vector>
 
 using namespace std;
 using namespace langutil;
@@ -43,9 +46,9 @@ class Parser::ASTNodeFactory
 {
 public:
 	explicit ASTNodeFactory(Parser const& _parser):
-		m_parser(_parser), m_location(_parser.position(), -1, _parser.source()) {}
+		m_parser(_parser), m_location{_parser.position(), -1, _parser.source()} {}
 	ASTNodeFactory(Parser const& _parser, ASTPointer<ASTNode> const& _childNode):
-		m_parser(_parser), m_location(_childNode->location()) {}
+		m_parser(_parser), m_location{_childNode->location()} {}
 
 	void markEndPosition() { m_location.end = m_parser.endPosition(); }
 	void setLocation(SourceLocation const& _location) { m_location = _location; }
@@ -105,6 +108,20 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	}
 }
 
+void Parser::parsePragmaVersion(vector<Token> const& tokens, vector<string> const& literals)
+{
+	SemVerMatchExpressionParser parser(tokens, literals);
+	auto matchExpression = parser.parse();
+	static SemVerVersion const currentVersion{string(VersionString)};
+	// FIXME: only match for major version incompatibility
+	if (!matchExpression.matches(currentVersion))
+		fatalParserError(
+			"Source file requires different compiler version (current compiler is " +
+			string(VersionString) + " - note that nightly builds are considered to be "
+			"strictly less than the released version"
+		);
+}
+
 ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 {
 	RecursionGuard recursionGuard(*this);
@@ -133,6 +150,15 @@ ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 	while (m_scanner->currentToken() != Token::Semicolon && m_scanner->currentToken() != Token::EOS);
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
+
+	if (literals.size() >= 2 && literals[0] == "solidity")
+	{
+		parsePragmaVersion(
+			vector<Token>(tokens.begin() + 1, tokens.end()),
+			vector<string>(literals.begin() + 1, literals.end())
+		);
+	}
+
 	return nodeFactory.createNode<PragmaDirective>(tokens, literals);
 }
 
@@ -1524,6 +1550,12 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	case Token::Identifier:
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
+		break;
+	case Token::Type:
+		// Inside expressions "type" is the name of a special, globally-available function.
+		nodeFactory.markEndPosition();
+		m_scanner->next();
+		expression = nodeFactory.createNode<Identifier>(make_shared<ASTString>("type"));
 		break;
 	case Token::LParen:
 	case Token::LBrack:

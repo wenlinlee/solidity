@@ -21,19 +21,22 @@
  */
 
 #include <libsolidity/codegen/CompilerContext.h>
-#include <libsolidity/codegen/CompilerUtils.h>
+
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/codegen/AsmCodeGen.h>
+#include <libsolidity/codegen/Compiler.h>
+#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/interface/Version.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/YulString.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/YulString.h>
+
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -164,11 +167,18 @@ unsigned CompilerContext::numberOfLocalVariables() const
 	return m_localVariables.size();
 }
 
-eth::Assembly const& CompilerContext::compiledContract(const ContractDefinition& _contract) const
+shared_ptr<eth::Assembly> CompilerContext::compiledContract(ContractDefinition const& _contract) const
 {
-	auto ret = m_compiledContracts.find(&_contract);
-	solAssert(ret != m_compiledContracts.end(), "Compiled contract not found.");
-	return *ret->second;
+	auto ret = m_otherCompilers.find(&_contract);
+	solAssert(ret != m_otherCompilers.end(), "Compiled contract not found.");
+	return ret->second->assemblyPtr();
+}
+
+shared_ptr<eth::Assembly> CompilerContext::compiledContractRuntime(ContractDefinition const& _contract) const
+{
+	auto ret = m_otherCompilers.find(&_contract);
+	solAssert(ret != m_otherCompilers.end(), "Compiled contract not found.");
+	return ret->second->runtimeAssemblyPtr();
 }
 
 bool CompilerContext::isLocalVariable(Declaration const* _declaration) const

@@ -17,12 +17,9 @@
 
 #pragma once
 
-#include <libsolidity/formal/SSAVariable.h>
-
 #include <libsolidity/formal/SolverInterface.h>
-
+#include <libsolidity/formal/SSAVariable.h>
 #include <libsolidity/ast/Types.h>
-
 #include <memory>
 
 namespace dev
@@ -141,6 +138,19 @@ private:
 
 	/// Stores the current function declaration.
 	smt::Expression m_declaration;
+};
+
+/**
+ * Specialization of SymbolicVariable for Mapping
+ */
+class SymbolicMappingVariable: public SymbolicVariable
+{
+public:
+	SymbolicMappingVariable(
+		TypePointer _type,
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
 };
 
 }

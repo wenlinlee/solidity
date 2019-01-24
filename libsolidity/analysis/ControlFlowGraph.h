@@ -20,6 +20,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/SourceLocation.h>
 
 #include <map>
 #include <memory>
@@ -98,12 +99,15 @@ struct CFGNode
 
 	/// Variable occurrences in the node.
 	std::vector<VariableOccurrence> variableOccurrences;
+	// Source location of this control flow block.
+	langutil::SourceLocation location;
 };
 
 /** Describes the control flow of a function. */
 struct FunctionFlow
 {
-	virtual ~FunctionFlow() {}
+	virtual ~FunctionFlow() = default;
+
 	/// Entry node. Control flow of the function starts here.
 	/// This node is empty and does not have any entries.
 	CFGNode* entry = nullptr;

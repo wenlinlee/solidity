@@ -20,19 +20,18 @@
  * Solidity compiler.
  */
 
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/codegen/AsmCodeGen.h>
+#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
-#include <libsolidity/codegen/CompilerUtils.h>
-#include <libsolidity/codegen/AsmCodeGen.h>
-#include <libsolidity/ast/AST.h>
-#include <liblangutil/ErrorReporter.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <boost/range/adaptor/reversed.hpp>
-
 #include <algorithm>
 
 using namespace std;
@@ -61,7 +60,7 @@ private:
 
 void ContractCompiler::compileContract(
 	ContractDefinition const& _contract,
-	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
+	map<ContractDefinition const*, shared_ptr<Compiler const>> const& _otherCompilers
 )
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
@@ -71,7 +70,7 @@ void ContractCompiler::compileContract(
 		// This has to be the first code in the contract.
 		appendDelegatecallCheck();
 
-	initializeContext(_contract, _contracts);
+	initializeContext(_contract, _otherCompilers);
 	// This generates the dispatch function for externally visible functions
 	// and adds the function to the compilation queue. Additionally internal functions,
 	// which are referenced directly or indirectly will be added.
@@ -82,7 +81,7 @@ void ContractCompiler::compileContract(
 
 size_t ContractCompiler::compileConstructor(
 	ContractDefinition const& _contract,
-	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
+	std::map<ContractDefinition const*, shared_ptr<Compiler const>> const& _otherCompilers
 )
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
@@ -90,18 +89,18 @@ size_t ContractCompiler::compileConstructor(
 		return deployLibrary(_contract);
 	else
 	{
-		initializeContext(_contract, _contracts);
+		initializeContext(_contract, _otherCompilers);
 		return packIntoContractCreator(_contract);
 	}
 }
 
 void ContractCompiler::initializeContext(
 	ContractDefinition const& _contract,
-	map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts
+	map<ContractDefinition const*, shared_ptr<Compiler const>> const& _otherCompilers
 )
 {
 	m_context.setExperimentalFeatures(_contract.sourceUnit().annotation().experimentalFeatures);
-	m_context.setCompiledContracts(_compiledContracts);
+	m_context.setOtherCompilers(_otherCompilers);
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	CompilerUtils(m_context).initialiseFreeMemoryPointer();
 	registerStateVariables(_contract);
@@ -332,6 +331,25 @@ void ContractCompiler::appendInternalSelector(
 	}
 }
 
+namespace
+{
+
+// Helper function to check if any function is payable
+bool hasPayableFunctions(ContractDefinition const& _contract)
+{
+	FunctionDefinition const* fallback = _contract.fallbackFunction();
+	if (fallback && fallback->isPayable())
+		return true;
+
+	for (auto const& it: _contract.interfaceFunctions())
+		if (it.second->isPayable())
+			return true;
+
+	return false;
+}
+
+}
+
 void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
 	map<FixedHash<4>, FunctionTypePointer> interfaceFunctions = _contract.interfaceFunctions();
@@ -343,6 +361,15 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	}
 
 	FunctionDefinition const* fallback = _contract.fallbackFunction();
+	solAssert(!_contract.isLibrary() || !fallback, "Libraries can't have fallback functions");
+
+	bool needToAddCallvalueCheck = true;
+	if (!hasPayableFunctions(_contract) && !interfaceFunctions.empty() && !_contract.isLibrary())
+	{
+		appendCallValueCheck();
+		needToAddCallvalueCheck = false;
+	}
+
 	eth::AssemblyItem notFound = m_context.newTag();
 	// directly jump to fallback if the data is too short to contain a function selector
 	// also guards against short data
@@ -351,23 +378,26 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 
 	// retrieve the function signature hash from the calldata
 	if (!interfaceFunctions.empty())
+	{
 		CompilerUtils(m_context).loadFromMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8), true);
 
-	// stack now is: <can-call-non-view-functions>? <funhash>
-	vector<FixedHash<4>> sortedIDs;
-	for (auto const& it: interfaceFunctions)
-	{
-		callDataUnpackerEntryPoints.insert(std::make_pair(it.first, m_context.newTag()));
-		sortedIDs.emplace_back(it.first);
+		// stack now is: <can-call-non-view-functions>? <funhash>
+		vector<FixedHash<4>> sortedIDs;
+		for (auto const& it: interfaceFunctions)
+		{
+			callDataUnpackerEntryPoints.emplace(it.first, m_context.newTag());
+			sortedIDs.emplace_back(it.first);
+		}
+		std::sort(sortedIDs.begin(), sortedIDs.end());
+		appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimise_runs);
 	}
-	std::sort(sortedIDs.begin(), sortedIDs.end());
-	appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimise_runs);
 
 	m_context << notFound;
+
 	if (fallback)
 	{
 		solAssert(!_contract.isLibrary(), "");
-		if (!fallback->isPayable())
+		if (!fallback->isPayable() && needToAddCallvalueCheck)
 			appendCallValueCheck();
 
 		solAssert(fallback->isFallback(), "");
@@ -397,7 +427,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		m_context.setStackOffset(0);
 		// We have to allow this for libraries, because value of the previous
 		// call is still visible in the delegatecall.
-		if (!functionType->isPayable() && !_contract.isLibrary())
+		if (!functionType->isPayable() && !_contract.isLibrary() && needToAddCallvalueCheck)
 			appendCallValueCheck();
 
 		// Return tag is used to jump out of the function.
@@ -686,7 +716,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 	CodeGenerator::assemble(
 		_inlineAssembly.operations(),
 		*_inlineAssembly.annotation().analysisInfo,
-		m_context.nonConstAssembly(),
+		*m_context.assemblyPtr(),
 		identifierAccess
 	);
 	m_context.setStackOffset(startStackHeight);

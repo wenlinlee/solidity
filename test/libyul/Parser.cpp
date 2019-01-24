@@ -304,6 +304,19 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 	BOOST_CHECK(successParse("{ if 42:u256 { } }"));
 }
 
+BOOST_AUTO_TEST_CASE(switch_case_types)
+{
+	CHECK_ERROR("{ switch 0:u256 case 0:u256 {} case 1:u32 {} }", TypeError, "Switch cases have non-matching types.");
+	// The following should be an error in the future, but this is not yet detected.
+	BOOST_CHECK(successParse("{ switch 0:u256 case 0:u32 {} case 1:u32 {} }"));
+}
+
+BOOST_AUTO_TEST_CASE(switch_duplicate_case)
+{
+	CHECK_ERROR("{ switch 0:u256 case 0:u256 {} case 0x0:u256 {} }", DeclarationError, "Duplicate case defined.");
+	BOOST_CHECK(successParse("{ switch 0:u256 case 42:u256 {} case 0x42:u256 {} }"));
+}
+
 BOOST_AUTO_TEST_CASE(builtins_parser)
 {
 	struct SimpleDialect: public Dialect
@@ -311,7 +324,7 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 		SimpleDialect(): Dialect(AsmFlavour::Strict) {}
 		BuiltinFunction const* builtin(YulString _name) const override
 		{
-			return _name == YulString{"builtin"} ? &f : nullptr;
+			return _name == "builtin"_yulstring ? &f : nullptr;
 		}
 		BuiltinFunction f;
 	};
@@ -329,9 +342,9 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 		SimpleDialect(): Dialect(AsmFlavour::Strict) {}
 		BuiltinFunction const* builtin(YulString _name) const override
 		{
-			return _name == YulString{"builtin"} ? &f : nullptr;
+			return _name == "builtin"_yulstring ? &f : nullptr;
 		}
-		BuiltinFunction f{YulString{"builtin"}, vector<Type>(2), vector<Type>(3), false};
+		BuiltinFunction f{"builtin"_yulstring, vector<Type>(2), vector<Type>(3), false, false};
 	};
 
 	shared_ptr<Dialect> dialect = make_shared<SimpleDialect>();
