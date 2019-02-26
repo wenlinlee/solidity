@@ -8,6 +8,7 @@ Important Bugfixes:
    and string literals. They are invalid in strings and will end comments.
  * Parser: Disallow unterminated multi-line comments at the end of input.
  * Parser: Treat ``/** /`` as unterminated multi-line comment.
+ * Feature: Add guomi.
 
 ### 0.4.24 (2018-05-16)
 
