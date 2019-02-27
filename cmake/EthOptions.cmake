@@ -3,6 +3,7 @@ macro(configure_project)
 
 	# features
 	eth_default_option(COVERAGE OFF)
+	eth_default_option(OSSFUZZ OFF)
 
 	# guomi
 	eth_default_option(BUILD_GM OFF)
