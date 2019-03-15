@@ -1,5 +1,8 @@
 ### 0.4.25 (2018-09-12)
 
+Compiler Features:
+ * Feature: Add guomi.
+
 Important Bugfixes:
  * Code Generator: Properly perform cleanup for exponentiation and non-256 bit types.
  * Type Checker: Report error when using indexed structs in events with experimental ABIEncoderV2. This used to log wrong values.
@@ -8,7 +11,6 @@ Important Bugfixes:
    and string literals. They are invalid in strings and will end comments.
  * Parser: Disallow unterminated multi-line comments at the end of input.
  * Parser: Treat ``/** /`` as unterminated multi-line comment.
- * Feature: Add guomi.
 
 ### 0.4.24 (2018-05-16)
 
