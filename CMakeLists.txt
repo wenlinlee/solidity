@@ -45,6 +45,7 @@ include(fmtlib)
 include(jsoncpp)
 include(range-v3)
 include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
+include(ProjectBoost)
 
 find_package(Threads)
 
@@ -130,7 +131,9 @@ add_subdirectory(libevmasm)
 add_subdirectory(libyul)
 add_subdirectory(libsolidity)
 add_subdirectory(libsolc)
-add_subdirectory(tools)
+if (TOOLS)
+  add_subdirectory(tools)
+endif()
 
 if (NOT EMSCRIPTEN)
 	add_subdirectory(solc)
