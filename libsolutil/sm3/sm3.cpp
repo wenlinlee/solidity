@@ -197,9 +197,9 @@ void sm3_update(sm3_context *ctx, unsigned char *input, int ilen)
 		return;
 
 	left = ctx->total[0] & 0x3F;
-	fill = 64 - left;
+	fill = (int) (64 - left);
 
-	ctx->total[0] += ilen;
+	ctx->total[0] += (unsigned int) ilen;
 	ctx->total[0] &= 0xFFFFFFFF;
 
 	if (ctx->total[0] < (unsigned int)ilen)
@@ -208,7 +208,7 @@ void sm3_update(sm3_context *ctx, unsigned char *input, int ilen)
 	if (left && ilen >= fill)
 	{
 		memcpy((void *)(ctx->buffer + left),
-			(void *)input, fill);
+			(void *)input, (size_t) fill);
 		sm3_process(ctx, ctx->buffer);
 		input += fill;
 		ilen -= fill;
@@ -225,7 +225,7 @@ void sm3_update(sm3_context *ctx, unsigned char *input, int ilen)
 	if (ilen > 0)
 	{
 		memcpy((void *)(ctx->buffer + left),
-			(void *)input, ilen);
+			(void *)input, (size_t) ilen);
 	}
 }
 
@@ -256,7 +256,7 @@ void sm3_finish(sm3_context *ctx, unsigned char output[32])
 	last = ctx->total[0] & 0x3F;
 	padn = (last < 56) ? (56 - last) : (120 - last);
 
-	sm3_update(ctx, (unsigned char *)sm3_padding, padn);
+	sm3_update(ctx, (unsigned char *)sm3_padding, (int) padn);
 	sm3_update(ctx, msglen, 8);
 
 	PUT_ULONG_BE(ctx->state[0], output, 0);

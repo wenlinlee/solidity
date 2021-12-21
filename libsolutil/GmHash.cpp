@@ -31,7 +31,7 @@ namespace solidity::util
 h256 keccak256(bytesConstRef _input)
 {
 	h256 ret;
-	SM3((unsigned char*) _input.data(), _input.size(), (unsigned char*) ret.data());
+	SM3((unsigned char*) _input.data(), (int) _input.size(), (unsigned char*) ret.data());
 	return ret;
 }
 
