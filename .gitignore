@@ -1,8 +1,5 @@
-/commit_hash.txt
-/prerelease.txt
-
-# Auth config for ppa release
-/.release_ppa_auth
+commit_hash.txt
+prerelease.txt
 
 # Compiled Object files
 *.slo
