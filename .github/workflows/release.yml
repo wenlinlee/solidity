@@ -1,0 +1,76 @@
+name: Build and Publish Binary
+on:
+    push:
+        tags-ignore:
+            - v1.*
+        branches-ignore:
+            - "**"
+    release:
+        types: [published, created]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    compile_macOS_release:
+        name: upload standard binary of macOS
+        runs-on: macos-latest
+        strategy:
+            matrix:
+                arch: [x86_64, arm64]
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 5
+            - name: Configure
+              run: |
+                  mkdir build && cd build
+                  if [ "${{ matrix.arch }}" == "arm64" ]; then
+                      export SDKROOT=$(xcrun --sdk macosx --show-sdk-path -arch arm64)
+                  else
+                      export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
+                  fi
+
+            - name: Compile solc
+              run: |
+                  cd build
+                  cmake -DCMAKE_BUILD_TYPE=Release ..
+                  make -j2
+
+            - name: Store binary
+              run: |
+                  mkdir bin
+                  mv build/solc/solc bin/
+                  tar -cvzf solc-${{ matrix.arch }}.tgz bin/solc
+
+            - name: Compile GM solc
+              run: |
+                  cd build
+                  cmake -DBUILD_GM=ON ..
+                  make -j2
+
+            - name: Store GM binary
+              run: |
+                  mv build/solc/solc bin/
+                  tar -cvzf solc-${{ matrix.arch }}-gm.tgz bin/solc
+
+            - name: Upload solc binaries to release
+              uses: svenstaro/upload-release-action@v1-release
+              with:
+                  repo_token: ${{ secrets.GITHUB_TOKEN }}
+                  file: solc-${{ matrix.arch }}.tgz
+                  asset_name: solc-mac-${{ matrix.arch }}.tar.gz
+                  tag: ${{ github.ref }}
+                  overwrite: true
+
+            - name: Upload GM solc binaries to release
+              uses: svenstaro/upload-release-action@v1-release
+              with:
+                  repo_token: ${{ secrets.GITHUB_TOKEN }}
+                  file: solc-${{ matrix.arch }}-gm.tgz
+                  asset_name: solc-mac-${{ matrix.arch }}-gm.tar.gz
+                  tag: ${{ github.ref }}
+                  overwrite: true
+
+
