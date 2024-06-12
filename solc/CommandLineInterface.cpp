@@ -778,8 +778,14 @@ void CommandLineInterface::processInput()
 
 void CommandLineInterface::printVersion()
 {
-	sout() << "solc, the solidity compiler commandline interface" << std::endl;
-	sout() << "Version: " << solidity::frontend::VersionString << std::endl;
+	sout() << "solc, the solidity compiler commandline interface" << std::endl
+    	   <<
+#if FISCO_GM
+    "Gm version: " <<
+#else
+    "Version: " <<
+#endif
+    solidity::frontend::VersionString << std::endl;
 }
 
 void CommandLineInterface::printLicense()
