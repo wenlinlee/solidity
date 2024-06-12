@@ -53,6 +53,8 @@ if (NOT USE_SYSTEM_LIBRARIES)
   include(fmtlib)
   include(nlohmann-json)
   include(range-v3)
+  include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
+  include(ProjectBoost)
 endif()
 
 find_package(Threads)

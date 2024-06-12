@@ -42,6 +42,13 @@ set(sources
 	Whiskers.h
 )
 
+if(BUILD_GM)
+	aux_source_directory(./sm3 sources)
+	include_directories(./sm3)
+	list(REMOVE_ITEM sources Keccak256.cpp)
+	list(APPEND sources GmHash.cpp)
+endif()
+
 add_library(solutil ${sources})
 target_link_libraries(solutil PUBLIC Boost::boost Boost::filesystem Boost::system range-v3 fmt::fmt-header-only nlohmann-json)
 target_include_directories(solutil PUBLIC "${PROJECT_SOURCE_DIR}")
