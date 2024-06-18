@@ -12,11 +12,9 @@ concurrency:
 
 jobs:
     compile_macOS_release:
-        name: upload standard binary of macOS
-        runs-on: macos-latest
-        strategy:
-            matrix:
-                arch: [x86_64, arm64]
+        name: upload standard binary of macOS x86
+        runs-on: macos-14-large
+
         steps:
             - uses: actions/checkout@v3
               with:
@@ -24,11 +22,6 @@ jobs:
             - name: Configure
               run: |
                   mkdir build && cd build
-                  if [ "${{ matrix.arch }}" == "arm64" ]; then
-                      export SDKROOT=$(xcrun --sdk macosx --show-sdk-path -arch arm64)
-                  else
-                      export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
-                  fi
 
             - name: Compile solc
               run: |
@@ -40,7 +33,7 @@ jobs:
               run: |
                   mkdir bin
                   mv build/solc/solc bin/
-                  tar -cvzf solc-${{ matrix.arch }}.tgz bin/solc
+                  tar -cvzf solc-x86.tgz bin/solc
 
             - name: Compile GM solc
               run: |
@@ -51,14 +44,14 @@ jobs:
             - name: Store GM binary
               run: |
                   mv build/solc/solc bin/
-                  tar -cvzf solc-${{ matrix.arch }}-gm.tgz bin/solc
+                  tar -cvzf solc-x86-gm.tgz bin/solc
 
             - name: Upload solc binaries to release
               uses: svenstaro/upload-release-action@v1-release
               with:
                   repo_token: ${{ secrets.GITHUB_TOKEN }}
-                  file: solc-${{ matrix.arch }}.tgz
-                  asset_name: solc-mac-${{ matrix.arch }}.tar.gz
+                  file: solc-x86.tgz
+                  asset_name: solc-mac-x86.tar.gz
                   tag: ${{ github.ref }}
                   overwrite: true
 
@@ -66,10 +59,62 @@ jobs:
               uses: svenstaro/upload-release-action@v1-release
               with:
                   repo_token: ${{ secrets.GITHUB_TOKEN }}
-                  file: solc-${{ matrix.arch }}-gm.tgz
-                  asset_name: solc-mac-${{ matrix.arch }}-gm.tar.gz
+                  file: solc-x86-gm.tgz
+                  asset_name: solc-mac-x86-gm.tar.gz
                   tag: ${{ github.ref }}
                   overwrite: true
+
+    name: upload standard binary of macOS arm64
+    runs-on: macos-14-xlarge
+
+    steps:
+        -   uses: actions/checkout@v3
+            with:
+                fetch-depth: 5
+        -   name: Configure
+            run: |
+                mkdir build && cd build
+
+        -   name: Compile solc
+            run: |
+                cd build
+                cmake -DCMAKE_BUILD_TYPE=Release ..
+                make -j2
+
+        -   name: Store binary
+            run: |
+                mkdir bin
+                mv build/solc/solc bin/
+                tar -cvzf solc-arrch64.tgz bin/solc
+
+        -   name: Compile GM solc
+            run: |
+                cd build
+                cmake -DBUILD_GM=ON ..
+                make -j2
+
+        -   name: Store GM binary
+            run: |
+                mv build/solc/solc bin/
+                tar -cvzf solc-arrch64-gm.tgz bin/solc
+
+        -   name: Upload solc binaries to release
+            uses: svenstaro/upload-release-action@v1-release
+            with:
+                repo_token: ${{ secrets.GITHUB_TOKEN }}
+                file: solc-arrch64.tgz
+                asset_name: solc-mac-arrch64.tar.gz
+                tag: ${{ github.ref }}
+                overwrite: true
+
+        -   name: Upload GM solc binaries to release
+            uses: svenstaro/upload-release-action@v1-release
+            with:
+                repo_token: ${{ secrets.GITHUB_TOKEN }}
+                file: solc-arrch64-gm.tgz
+                asset_name: solc-mac-arrch64-gm.tar.gz
+                tag: ${{ github.ref }}
+                overwrite: true
 
     compile_windows_release:
         name: upload standard binary of Windows
@@ -127,4 +172,113 @@ jobs:
                     file: solc-gm.zip
                     asset_name: solc-win-gm.zip
                     tag: ${{ github.ref }}
+
+    compile_linux_x86_release:
+        name: upload standard binary of Linux x86
+        runs-on: ubuntu-latest
+
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    fetch-depth: 5
+
+            -   name: Configure
+                run: |
+                    mkdir build && cd build
+
+            -   name: Compile solc
+                run: |
+                    cd build
+                    cmake -DCMAKE_BUILD_TYPE=Release ..
+                    make -j2
+
+            -   name: Store binary
+                run: |
+                    mkdir bin
+                    mv build/solc/solc bin/
+                    tar -cvzf solc-x86.tgz bin/solc
+
+            -   name: Compile GM solc
+                run: |
+                    cd build
+                    cmake -DBUILD_GM=ON ..
+                    make -j2
+
+            -   name: Store GM binary
+                run: |
+                    mv build/solc/solc bin/
+                    tar -cvzf solc-x86-gm.tgz bin/solc
+
+            -   name: Upload solc binaries to release
+                uses: svenstaro/upload-release-action@v1-release
+                with:
+                    repo_token: ${{ secrets.GITHUB_TOKEN }}
+                    file: solc-x86.tgz
+                    asset_name: solc-linux.tar.gz
+                    tag: ${{ github.ref }}
+                    overwrite: true
+
+            -   name: Upload GM solc binaries to release
+                uses: svenstaro/upload-release-action@v1-release
+                with:
+                    repo_token: ${{ secrets.GITHUB_TOKEN }}
+                    file: solc-x86-gm.tgz
+                    asset_name: solc-linux-gm.tar.gz
+                    tag: ${{ github.ref }}
+                    overwrite: true
+
+        compile_linux_arm64_release:
+            name: upload standard binary of Linux arm64
+            runs-on: arm
+
+            steps:
+                -   uses: actions/checkout@v3
+                    with:
+                        fetch-depth: 5
+
+                -   name: Configure
+                    run: |
+                        mkdir build && cd build
+
+                -   name: Compile solc
+                    run: |
+                        cd build
+                        cmake -DCMAKE_BUILD_TYPE=Release ..
+                        make -j2
+
+                -   name: Store binary
+                    run: |
+                        mkdir bin
+                        mv build/solc/solc bin/
+                        tar -cvzf solc-arrch64.tgz bin/solc
+
+                -   name: Compile GM solc
+                    run: |
+                        cd build
+                        cmake -DBUILD_GM=ON -DCMAKE_SYSTEM_PROCESSOR=aarch64 ..
+                        make -j2
+
+                -   name: Store GM binary
+                    run: |
+                        mv build/solc/solc bin/
+                        tar -cvzf solc-arrch64-gm.tgz bin/solc
+
+                -   name: Upload solc binaries to release
+                    uses: svenstaro/upload-release-action@v1-release
+                    with:
+                        repo_token: ${{ secrets.GITHUB_TOKEN }}
+                        file: solc-arrch64.tgz
+                        asset_name: solc-linux-arrch64.tar.gz
+                        tag: ${{ github.ref }}
+                        overwrite: true
+
+                -   name: Upload GM solc binaries to release
+                    uses: svenstaro/upload-release-action@v1-release
+                    with:
+                        repo_token: ${{ secrets.GITHUB_TOKEN }}
+                        file: solc-arrch64-gm.tgz
+                        asset_name: solc-linux-arrch64-gm.tar.gz
+                        tag: ${{ github.ref }}
+                        overwrite: true
+
 
