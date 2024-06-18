@@ -13,7 +13,7 @@ concurrency:
 jobs:
     compile_macOS_release:
         name: upload standard binary of macOS x86
-        runs-on: macos-13
+        runs-on: macos-14
 
         steps:
             - uses: actions/checkout@v3
@@ -37,7 +37,7 @@ jobs:
 
             - name: Compile GM solc
               run: |
-                  cd build
+                  cd build && rm -rf CMakeCache.txt
                   cmake -DBUILD_GM=ON ..
                   make -j2
 
@@ -66,7 +66,7 @@ jobs:
 
     compile_macOS_arm_release:
         name: upload standard binary of macOS arm64
-        runs-on: macos-13
+        runs-on: macos-14
 
         steps:
             -   uses: actions/checkout@v3
@@ -133,12 +133,12 @@ jobs:
                 run: |
                     mkdir build
                     cd build
-                    cmake -DCMAKE_BUILD_TYPE=Release ..
+                    cmake -G "Visual Studio 16 2019" ..
 
             -   name: Compile solc
                 run: |
                     cd build
-                    make -j2
+                    make
 
             -   name: Store binary
                 run: |
@@ -185,12 +185,17 @@ jobs:
 
             -   name: Configure
                 run: |
+                    sudo add-apt-repository ppa:ethereum/ethereum
+                    sudo add-apt-repository ppa:ethereum/ethereum-dev
+                    sudo apt-get update
+                    sudo apt-get install solc
+                    sudo apt-get install z3
                     mkdir build && cd build
 
             -   name: Compile solc
                 run: |
                     cd build
-                    cmake -DCMAKE_BUILD_TYPE=Release ..
+                    cmake -DCMAKE_BUILD_TYPE=Release  DTEST=OFF ..
                     make -j2
 
             -   name: Store binary
@@ -228,58 +233,5 @@ jobs:
                     tag: ${{ github.ref }}
                     overwrite: true
 
-    compile_linux_arm64_release:
-        name: upload standard binary of Linux arm64
-        runs-on: arm
-
-        steps:
-            -   uses: actions/checkout@v3
-                with:
-                    fetch-depth: 5
-
-            -   name: Configure
-                run: |
-                    mkdir build && cd build
-
-            -   name: Compile solc
-                run: |
-                    cd build
-                    cmake -DCMAKE_BUILD_TYPE=Release ..
-                    make -j2
-
-            -   name: Store binary
-                run: |
-                    mkdir bin
-                    mv build/solc/solc bin/
-                    tar -cvzf solc-arrch64.tgz bin/solc
-
-            -   name: Compile GM solc
-                run: |
-                    cd build
-                    cmake -DBUILD_GM=ON -DCMAKE_SYSTEM_PROCESSOR=aarch64 ..
-                    make -j2
-
-            -   name: Store GM binary
-                run: |
-                    mv build/solc/solc bin/
-                    tar -cvzf solc-arrch64-gm.tgz bin/solc
-
-            -   name: Upload solc binaries to release
-                uses: svenstaro/upload-release-action@v1-release
-                with:
-                    repo_token: ${{ secrets.GITHUB_TOKEN }}
-                    file: solc-arrch64.tgz
-                    asset_name: solc-linux-arrch64.tar.gz
-                    tag: ${{ github.ref }}
-                    overwrite: true
-
-            -   name: Upload GM solc binaries to release
-                uses: svenstaro/upload-release-action@v1-release
-                with:
-                    repo_token: ${{ secrets.GITHUB_TOKEN }}
-                    file: solc-arrch64-gm.tgz
-                    asset_name: solc-linux-arrch64-gm.tar.gz
-                    tag: ${{ github.ref }}
-                    overwrite: true
 
 
