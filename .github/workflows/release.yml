@@ -137,7 +137,7 @@ jobs:
                     mkdir build
                     cd build
                     cmake -G "Visual Studio 16 2019" -DUSE_Z3=OFF ..
-                    msbuild solidity.sln /p:Configuration=Release
+                    cmake --build . -j 10 --target install --config Release
 
             -   name: Store binary
                 run: |
