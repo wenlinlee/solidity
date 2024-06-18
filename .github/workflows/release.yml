@@ -13,7 +13,7 @@ concurrency:
 jobs:
     compile_macOS_release:
         name: upload standard binary of macOS x86
-        runs-on: macos-14-large
+        runs-on: macos-13
 
         steps:
             - uses: actions/checkout@v3
@@ -66,7 +66,7 @@ jobs:
 
     compile_macOS_arm_release:
         name: upload standard binary of macOS arm64
-        runs-on: macos-14-xlarge
+        runs-on: macos-13
 
         steps:
             -   uses: actions/checkout@v3
@@ -79,7 +79,7 @@ jobs:
             -   name: Compile solc
                 run: |
                     cd build
-                    cmake -DCMAKE_BUILD_TYPE=Release ..
+                    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=aarch64 ..
                     make -j2
 
             -   name: Store binary
