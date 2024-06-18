@@ -125,6 +125,9 @@ jobs:
                 with:
                     fetch-depth: 5
 
+            -   name: Add msbuild to PATH
+                uses: microsoft/setup-msbuild@v2
+
             -   name: install Prerequisites
                 run: |
                     .\scripts\install_deps.ps1
@@ -132,7 +135,8 @@ jobs:
             -   name: Configure and Compile solc
                 run: |
                     mkdir build
-                    cmake --build . -j 2 --target install --config Release
+                    cmake -G "Visual Studio 16 2019" -DUSE_Z3=OFF ..
+                    msbuild solidity.sln /p:Configuration=Release
 
             -   name: Store binary
                 run: |
