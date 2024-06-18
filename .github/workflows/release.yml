@@ -64,57 +64,58 @@ jobs:
                   tag: ${{ github.ref }}
                   overwrite: true
 
-    name: upload standard binary of macOS arm64
-    runs-on: macos-14-xlarge
+    compile_macOS_arm_release:
+        name: upload standard binary of macOS arm64
+        runs-on: macos-14-xlarge
 
-    steps:
-        -   uses: actions/checkout@v3
-            with:
-                fetch-depth: 5
-        -   name: Configure
-            run: |
-                mkdir build && cd build
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    fetch-depth: 5
+            -   name: Configure
+                run: |
+                    mkdir build && cd build
 
-        -   name: Compile solc
-            run: |
-                cd build
-                cmake -DCMAKE_BUILD_TYPE=Release ..
-                make -j2
+            -   name: Compile solc
+                run: |
+                    cd build
+                    cmake -DCMAKE_BUILD_TYPE=Release ..
+                    make -j2
 
-        -   name: Store binary
-            run: |
-                mkdir bin
-                mv build/solc/solc bin/
-                tar -cvzf solc-arrch64.tgz bin/solc
+            -   name: Store binary
+                run: |
+                    mkdir bin
+                    mv build/solc/solc bin/
+                    tar -cvzf solc-arrch64.tgz bin/solc
 
-        -   name: Compile GM solc
-            run: |
-                cd build
-                cmake -DBUILD_GM=ON ..
-                make -j2
+            -   name: Compile GM solc
+                run: |
+                    cd build
+                    cmake -DBUILD_GM=ON ..
+                    make -j2
 
-        -   name: Store GM binary
-            run: |
-                mv build/solc/solc bin/
-                tar -cvzf solc-arrch64-gm.tgz bin/solc
+            -   name: Store GM binary
+                run: |
+                    mv build/solc/solc bin/
+                    tar -cvzf solc-arrch64-gm.tgz bin/solc
 
-        -   name: Upload solc binaries to release
-            uses: svenstaro/upload-release-action@v1-release
-            with:
-                repo_token: ${{ secrets.GITHUB_TOKEN }}
-                file: solc-arrch64.tgz
-                asset_name: solc-mac-arrch64.tar.gz
-                tag: ${{ github.ref }}
-                overwrite: true
+            -   name: Upload solc binaries to release
+                uses: svenstaro/upload-release-action@v1-release
+                with:
+                    repo_token: ${{ secrets.GITHUB_TOKEN }}
+                    file: solc-arrch64.tgz
+                    asset_name: solc-mac-arrch64.tar.gz
+                    tag: ${{ github.ref }}
+                    overwrite: true
 
-        -   name: Upload GM solc binaries to release
-            uses: svenstaro/upload-release-action@v1-release
-            with:
-                repo_token: ${{ secrets.GITHUB_TOKEN }}
-                file: solc-arrch64-gm.tgz
-                asset_name: solc-mac-arrch64-gm.tar.gz
-                tag: ${{ github.ref }}
-                overwrite: true
+            -   name: Upload GM solc binaries to release
+                uses: svenstaro/upload-release-action@v1-release
+                with:
+                    repo_token: ${{ secrets.GITHUB_TOKEN }}
+                    file: solc-arrch64-gm.tgz
+                    asset_name: solc-mac-arrch64-gm.tar.gz
+                    tag: ${{ github.ref }}
+                    overwrite: true
 
     compile_windows_release:
         name: upload standard binary of Windows
@@ -227,58 +228,58 @@ jobs:
                     tag: ${{ github.ref }}
                     overwrite: true
 
-        compile_linux_arm64_release:
-            name: upload standard binary of Linux arm64
-            runs-on: arm
+    compile_linux_arm64_release:
+        name: upload standard binary of Linux arm64
+        runs-on: arm
 
-            steps:
-                -   uses: actions/checkout@v3
-                    with:
-                        fetch-depth: 5
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    fetch-depth: 5
 
-                -   name: Configure
-                    run: |
-                        mkdir build && cd build
+            -   name: Configure
+                run: |
+                    mkdir build && cd build
 
-                -   name: Compile solc
-                    run: |
-                        cd build
-                        cmake -DCMAKE_BUILD_TYPE=Release ..
-                        make -j2
+            -   name: Compile solc
+                run: |
+                    cd build
+                    cmake -DCMAKE_BUILD_TYPE=Release ..
+                    make -j2
 
-                -   name: Store binary
-                    run: |
-                        mkdir bin
-                        mv build/solc/solc bin/
-                        tar -cvzf solc-arrch64.tgz bin/solc
+            -   name: Store binary
+                run: |
+                    mkdir bin
+                    mv build/solc/solc bin/
+                    tar -cvzf solc-arrch64.tgz bin/solc
 
-                -   name: Compile GM solc
-                    run: |
-                        cd build
-                        cmake -DBUILD_GM=ON -DCMAKE_SYSTEM_PROCESSOR=aarch64 ..
-                        make -j2
+            -   name: Compile GM solc
+                run: |
+                    cd build
+                    cmake -DBUILD_GM=ON -DCMAKE_SYSTEM_PROCESSOR=aarch64 ..
+                    make -j2
 
-                -   name: Store GM binary
-                    run: |
-                        mv build/solc/solc bin/
-                        tar -cvzf solc-arrch64-gm.tgz bin/solc
+            -   name: Store GM binary
+                run: |
+                    mv build/solc/solc bin/
+                    tar -cvzf solc-arrch64-gm.tgz bin/solc
 
-                -   name: Upload solc binaries to release
-                    uses: svenstaro/upload-release-action@v1-release
-                    with:
-                        repo_token: ${{ secrets.GITHUB_TOKEN }}
-                        file: solc-arrch64.tgz
-                        asset_name: solc-linux-arrch64.tar.gz
-                        tag: ${{ github.ref }}
-                        overwrite: true
+            -   name: Upload solc binaries to release
+                uses: svenstaro/upload-release-action@v1-release
+                with:
+                    repo_token: ${{ secrets.GITHUB_TOKEN }}
+                    file: solc-arrch64.tgz
+                    asset_name: solc-linux-arrch64.tar.gz
+                    tag: ${{ github.ref }}
+                    overwrite: true
 
-                -   name: Upload GM solc binaries to release
-                    uses: svenstaro/upload-release-action@v1-release
-                    with:
-                        repo_token: ${{ secrets.GITHUB_TOKEN }}
-                        file: solc-arrch64-gm.tgz
-                        asset_name: solc-linux-arrch64-gm.tar.gz
-                        tag: ${{ github.ref }}
-                        overwrite: true
+            -   name: Upload GM solc binaries to release
+                uses: svenstaro/upload-release-action@v1-release
+                with:
+                    repo_token: ${{ secrets.GITHUB_TOKEN }}
+                    file: solc-arrch64-gm.tgz
+                    asset_name: solc-linux-arrch64-gm.tar.gz
+                    tag: ${{ github.ref }}
+                    overwrite: true
 
 
