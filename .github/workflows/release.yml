@@ -131,11 +131,9 @@ jobs:
 
             -   name: Configure
                 run: |
-                    rm -rf CMakeCache.txt
                     mkdir build
                     cd build
-                    rm -rf CMakeCache.txt
-                    cmake --build . --config Release
+                    cmake -G "Visual Studio 16 2019" ..
 
             -   name: Compile solc
                 run: |
