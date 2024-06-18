@@ -119,7 +119,7 @@ jobs:
 
     compile_windows_release:
         name: upload standard binary of Windows
-        runs-on: windows-2022
+        runs-on: windows-2019
         steps:
             -   uses: actions/checkout@v3
                 with:
@@ -132,7 +132,6 @@ jobs:
             -   name: Configure and Compile solc
                 run: |
                     mkdir build
-                    cd build
                     ..\deps\cmake\bin\cmake --build . -j 2 --target install --config Release
 
             -   name: Store binary
