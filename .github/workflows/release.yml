@@ -137,7 +137,6 @@ jobs:
 
             -   name: Compile solc
                 run: |
-                    cd build
                     make
 
             -   name: Store binary
@@ -173,6 +172,7 @@ jobs:
                     file: solc-gm.zip
                     asset_name: solc-win-gm.zip
                     tag: ${{ github.ref }}
+
 
     compile_linux_x86_release:
         name: upload standard binary of Linux x86
