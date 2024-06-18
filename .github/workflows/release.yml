@@ -119,7 +119,7 @@ jobs:
 
     compile_windows_release:
         name: upload standard binary of Windows
-        runs-on: windows-2019
+        runs-on: windows-2022
         steps:
             -   uses: actions/checkout@v3
                 with:
@@ -133,8 +133,7 @@ jobs:
                 run: |
                     mkdir build
                     cd build
-                    cmake -G "Visual Studio 16 2019" ..
-                    msbuild solidity.sln /p:Configuration=Release /m:10 /v:minimal
+                    ..\deps\cmake\bin\cmake --build . -j 2 --target install --config Release
 
             -   name: Store binary
                 run: |
