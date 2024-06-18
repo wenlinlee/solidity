@@ -129,11 +129,19 @@ jobs:
                 run: |
                     .\scripts\install_deps.ps1
 
+            - name: Install Visual Studio 2019
+              uses: microsoft/setup-vsdev@v1
+              with:
+                    vs-version: 2019
+                    configuration: Release
+
             -   name: Configure
                 run: |
+                    rm -rf CMakeCache.txt
                     mkdir build
                     cd build
-                     cmake --build . --config Release
+                    rm -rf CMakeCache.txt
+                    cmake --build . --config Release
 
             -   name: Compile solc
                 run: |
