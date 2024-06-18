@@ -3,8 +3,6 @@ on:
     push:
         tags-ignore:
             - v1.*
-        branches-ignore:
-            - "**"
     release:
         types: [published, created]
 
@@ -73,4 +71,60 @@ jobs:
                   tag: ${{ github.ref }}
                   overwrite: true
 
+    compile_windows_release:
+        name: upload standard binary of Windows
+        runs-on: windows-latest
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    fetch-depth: 5
+
+            -   name: install Prerequisites
+                run: |
+                    .\scripts\install_deps.ps1
+
+            -   name: Configure
+                run: |
+                    mkdir build
+                    cd build
+                    cmake -DCMAKE_BUILD_TYPE=Release ..
+
+            -   name: Compile solc
+                run: |
+                    cd build
+                    make -j2
+
+            -   name: Store binary
+                run: |
+                    mkdir bin
+                    copy build\solc\Release\solc.exe bin\
+                    7z a solc.zip .\bin\solc.exe
+
+            -   name: Compile GM solc
+                run: |
+                    cd build
+                    cmake -DBUILD_GM=ON ..
+                    cmake --build . --config Release -j2
+
+            -   name: Store GM binary
+                run: |
+                    copy build\solc\Release\solc.exe bin\
+                    7z a solc-gm.zip .\bin\solc.exe
+
+            -   name: Upload solc binaries to release
+                uses: svenstaro/upload-release-action@v1-release
+                with:
+                    repo_token: ${{ secrets.GITHUB_TOKEN }}
+                    file: solc.zip
+                    asset_name: solc-win.zip
+                    tag: ${{ github.ref }}
+                    overwrite: true
+
+            -   name: Upload GM solc binaries to release
+                uses: svenstaro/upload-release-action@v1-release
+                with:
+                    repo_token: ${{ secrets.GITHUB_TOKEN }}
+                    file: solc-gm.zip
+                    asset_name: solc-win-gm.zip
+                    tag: ${{ github.ref }}
 
