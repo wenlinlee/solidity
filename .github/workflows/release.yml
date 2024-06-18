@@ -129,11 +129,12 @@ jobs:
                 run: |
                     .\scripts\install_deps.ps1
 
-            -   name: Configure
+            -   name: Configure and Compile solc
                 run: |
                     mkdir build
                     cd build
-                    cmake --build . --config Release -j2
+                    cmake -G "Visual Studio 16 2019" ..
+                    msbuild solidity.sln /p:Configuration=Release /m:10 /v:minimal
 
             -   name: Store binary
                 run: |
