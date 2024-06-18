@@ -133,8 +133,7 @@ jobs:
                 run: |
                     mkdir build
                     cd build
-                    cmake -G "Visual Studio 16 2019" ..
-                    make
+                    cmake --build . --config Release -j2
 
             -   name: Store binary
                 run: |
