@@ -5,7 +5,7 @@ set(BOOST_CXXFLAGS "")
 if (WIN32)
     set(BOOST_BOOTSTRAP_COMMAND bootstrap.bat)
     set(BOOST_BUILD_TOOL b2.exe)
-    set(BOOST_LIBRARY_SUFFIX -vc141-mt-x64-1_68.lib)
+    set(BOOST_LIBRARY_SUFFIX -vc142-mt-x64-1_83.lib)
 elseif(EMSCRIPTEN)
     set(BOOST_BOOTSTRAP_COMMAND ./bootstrap.sh)
     set(BOOST_BUILD_TOOL ./b2 toolset=emscripten)
@@ -29,10 +29,10 @@ endif()
 ExternalProject_Add(boost
     PREFIX ${CMAKE_SOURCE_DIR}/deps
     DOWNLOAD_NO_PROGRESS 1
-    URL https://osp-1257653870.cos.ap-guangzhou.myqcloud.com/FISCO-BCOS/FISCO-BCOS/deps/boost_1_76_0.tar.bz2
-        https://downloads.sourceforge.net/project/boost/boost/1.76.0/source/boost_1_76_0.tar.bz2
-        https://nchc.dl.sourceforge.net/project/boost/boost/1.76.0/boost_1_76_0.tar.bz2
-    URL_HASH SHA256=f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41
+    URL https://osp-1257653870.cos.ap-guangzhou.myqcloud.com/FISCO-BCOS/FISCO-BCOS/deps/boost_1_83_0.tar.bz2
+    	https://sourceforge.net/projects/boost/files/boost/1.83.0/boost_1_83_0.tar.bz2
+		https://nchc.dl.sourceforge.net/project/boost/boost/1.83.0/boost_1_83_0.tar.bz2
+    URL_HASH SHA256=6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ${BOOST_BOOTSTRAP_COMMAND}
     LOG_CONFIGURE 1
