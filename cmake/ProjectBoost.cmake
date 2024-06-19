@@ -29,7 +29,8 @@ endif()
 ExternalProject_Add(boost
     PREFIX ${CMAKE_SOURCE_DIR}/deps
     DOWNLOAD_NO_PROGRESS 1
-    URL https://sourceforge.net/projects/boost/files/boost/1.83.0/boost_1_83_0.tar.bz2
+    URL https://osp-1257653870.cos.ap-guangzhou.myqcloud.com/FISCO-BCOS/FISCO-BCOS/deps/boost_1_83_0.tar.bz2
+    	https://sourceforge.net/projects/boost/files/boost/1.83.0/boost_1_83_0.tar.bz2
 		https://nchc.dl.sourceforge.net/project/boost/boost/1.83.0/boost_1_83_0.tar.bz2
     URL_HASH SHA256=6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e
     BUILD_IN_SOURCE 1
