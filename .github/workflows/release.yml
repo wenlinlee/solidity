@@ -148,8 +148,8 @@ jobs:
             -   name: Compile GM solc
                 run: |
                     cd build
-                    cmake -DBUILD_GM=ON ..
-                    cmake --build . --config Release -j2
+                    cmake -G "Visual Studio 16 2019" -DUSE_Z3=OFF -DBUILD_GM=ON ..
+                    cmake --build . -j 10 --target install --config Release
 
             -   name: Store GM binary
                 run: |
