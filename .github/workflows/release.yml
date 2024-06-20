@@ -195,7 +195,7 @@ jobs:
 
             -   name: Compile solc
                 run: |
-                    cd build
+                    mkdir build && cd build
                     cmake -DCMAKE_BUILD_TYPE=Release -DUSE_Z3=OFF ..
                     make -j2
 
