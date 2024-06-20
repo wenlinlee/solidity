@@ -31,7 +31,7 @@ jobs:
 
             - name: Store binary
               run: |
-                  cp build/solc/solc ./
+                  mv build/solc/solc ./
                   tar -cvzf solc-x86.tar.gz solc
 
             - name: Compile GM solc
@@ -42,7 +42,7 @@ jobs:
 
             - name: Store GM binary
               run: |
-                  cp build/solc/solc ./
+                  mv build/solc/solc ./
                   tar -cvzf solc-x86-gm.tar.gz solc
 
             - name: Upload solc binaries to release
@@ -83,7 +83,7 @@ jobs:
 
             -   name: Store binary
                 run: |
-                    cp build/solc/solc ./
+                    mv build/solc/solc ./
                     tar -cvzf solc-arrch64.tar.gz solc
 
             -   name: Compile GM solc
@@ -139,9 +139,8 @@ jobs:
 
             -   name: Store binary
                 run: |
-                    mkdir bin
-                    copy build\solc\Release\solc.exe bin\
-                    7z a solc.zip .\bin\solc.exe
+                    copy build\solc\Release\solc.exe .\
+                    7z a solc.zip solc.exe
 
             -   name: Compile GM solc
                 run: |
@@ -151,7 +150,7 @@ jobs:
 
             -   name: Store GM binary
                 run: |
-                    copy build\solc\Release\solc.exe bin\
+                    copy build\solc\Release\solc.exe .\
                     7z a solc-gm.zip .\bin\solc.exe
 
             -   name: Upload solc binaries to release
@@ -198,7 +197,7 @@ jobs:
 
             -   name: Store binary
                 run: |
-                    cp build/solc/solc ./
+                    mv build/solc/solc ./
                     tar -cvzf solc-x86.tar.gz solc
 
             -   name: Compile GM solc
@@ -209,7 +208,7 @@ jobs:
 
             -   name: Store GM binary
                 run: |
-                    cp build/solc/solc ./
+                    mv build/solc/solc ./
                     tar -cvzf solc-x86-gm.tar.gz solc
 
             -   name: Upload solc binaries to release
