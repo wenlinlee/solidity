@@ -137,7 +137,7 @@ jobs:
                     mkdir build
                     cd build
                     cmake -G "Visual Studio 16 2019" -DUSE_Z3=OFF ..
-                    cmake --build . -j 10 --target install --config Release
+                    cmake --build . -j 2 --target install --config Release
 
             -   name: Store binary
                 run: |
@@ -177,20 +177,21 @@ jobs:
     compile_linux_x86_release:
         name: upload standard binary of Linux x86
         runs-on: ubuntu-20.04
+        container: docker.io/centos:7
 
         steps:
             -   uses: actions/checkout@v3
                 with:
                     fetch-depth: 5
 
+            - name: Setup cmake
+                  uses: jwlawson/actions-setup-cmake@v1.14
+                  with:
+                      cmake-version: '3.15.2'
+
             -   name: Configure
                 run: |
-                    sudo add-apt-repository ppa:ethereum/ethereum
-                    sudo add-apt-repository ppa:ethereum/ethereum-dev
-                    sudo apt-get update
-                    sudo apt-get install solc
-                    sudo apt-get install z3
-                    mkdir build && cd build
+                    yum install -y epel-release centos-release-scl devtoolset-9 wget 
 
             -   name: Compile solc
                 run: |
