@@ -184,10 +184,10 @@ jobs:
                 with:
                     fetch-depth: 5
 
-            - name: Setup cmake
-                  uses: jwlawson/actions-setup-cmake@v1.14
-                  with:
-                      cmake-version: '3.15.2'
+            -   name: Setup cmake
+                uses: jwlawson/actions-setup-cmake@v1.14
+                with:
+                    cmake-version: '3.15.2'
 
             -   name: Configure
                 run: |
