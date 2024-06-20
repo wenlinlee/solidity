@@ -50,7 +50,7 @@ jobs:
               uses: svenstaro/upload-release-action@v1-release
               with:
                   repo_token: ${{ secrets.GITHUB_TOKEN }}
-                  file: solc-mac
+                  file: bin/solc-mac
                   asset_name: solc-mac-x86
                   tag: ${{ github.ref }}
                   overwrite: true
@@ -59,7 +59,7 @@ jobs:
               uses: svenstaro/upload-release-action@v1-release
               with:
                   repo_token: ${{ secrets.GITHUB_TOKEN }}
-                  file: solc-mac-gm
+                  file: bin/solc-mac-gm
                   asset_name: solc-mac-x86-gm
                   tag: ${{ github.ref }}
                   overwrite: true
@@ -103,7 +103,7 @@ jobs:
                 uses: svenstaro/upload-release-action@v1-release
                 with:
                     repo_token: ${{ secrets.GITHUB_TOKEN }}
-                    file: solc-mac
+                    file: bin/solc-mac
                     asset_name: solc-mac-arrch64
                     tag: ${{ github.ref }}
                     overwrite: true
@@ -112,7 +112,7 @@ jobs:
                 uses: svenstaro/upload-release-action@v1-release
                 with:
                     repo_token: ${{ secrets.GITHUB_TOKEN }}
-                    file: solc-mac-gm
+                    file: bin/solc-mac-gm
                     asset_name: solc-mac-arrch64-gm
                     tag: ${{ github.ref }}
                     overwrite: true
@@ -160,7 +160,7 @@ jobs:
                 uses: svenstaro/upload-release-action@v1-release
                 with:
                     repo_token: ${{ secrets.GITHUB_TOKEN }}
-                    file: solc.exe
+                    file: bin/solc.exe
                     asset_name: solc-win.exe
                     tag: ${{ github.ref }}
                     overwrite: true
@@ -169,7 +169,7 @@ jobs:
                 uses: svenstaro/upload-release-action@v1-release
                 with:
                     repo_token: ${{ secrets.GITHUB_TOKEN }}
-                    file: solc-gm.exe
+                    file: bin/solc-gm.exe
                     asset_name: solc-win-gm.exe
                     tag: ${{ github.ref }}
 
@@ -219,7 +219,7 @@ jobs:
                 uses: svenstaro/upload-release-action@v1-release
                 with:
                     repo_token: ${{ secrets.GITHUB_TOKEN }}
-                    file: solc
+                    file: bin/solc
                     asset_name: solc-linux-x86
                     tag: ${{ github.ref }}
                     overwrite: true
@@ -228,7 +228,7 @@ jobs:
                 uses: svenstaro/upload-release-action@v1-release
                 with:
                     repo_token: ${{ secrets.GITHUB_TOKEN }}
-                    file: solc-gm
+                    file: bin/solc-gm
                     asset_name: solc-linux-x86-gm
                     tag: ${{ github.ref }}
                     overwrite: true
