@@ -191,7 +191,10 @@ jobs:
 
             -   name: Configure
                 run: |
-                    yum install -y epel-release centos-release-scl devtoolset-9 wget 
+                    yum install -y epel-release centos-release-scl wget 
+                    yum update -y
+                    yum install -y devtoolset-9
+                    
 
             -   name: Compile solc
                 run: |
