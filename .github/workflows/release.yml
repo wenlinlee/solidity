@@ -186,9 +186,10 @@ jobs:
     compile_centos_release:
         name: upload standard binary of centos
         runs-on: ubuntu-20.04
-        container: docker.io/centos:7
-        volumes:
-            - /__w/solidity:/__w/solidity
+        container:
+            image: docker.io/centos:7
+            volumes:
+                - /__w/solidity:/__w/solidity
 
         steps:
             -   name: Setup cmake
