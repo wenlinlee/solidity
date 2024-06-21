@@ -191,7 +191,8 @@ jobs:
         steps:
             -   uses: actions/checkout@v3
                 with:
-                    path: /root/solidity
+                    fetch-depth: 5
+                    path: /__w/solidity/solidity
 
             -   name: Setup cmake
                 uses: jwlawson/actions-setup-cmake@v1.14
@@ -207,7 +208,7 @@ jobs:
 
             -   name: Compile solc
                 run: |
-                    cd /root/solidity/
+                    cd /__w/solidity/solidity
                     git log
                     . /opt/rh/devtoolset-9/enable
                     mkdir build && cd build
