@@ -187,12 +187,10 @@ jobs:
         name: upload standard binary of centos
         runs-on: ubuntu-20.04
         container: docker.io/centos:7
+        volumes:
+            - /__w/solidity:/__w/solidity
 
         steps:
-            -   uses: actions/checkout@v3
-                with:
-                    fetch-depth: 5
-
             -   name: Setup cmake
                 uses: jwlawson/actions-setup-cmake@v1.14
                 with:
@@ -202,15 +200,17 @@ jobs:
                 run: |
                     yum install -y epel-release centos-release-scl 
                     yum update -y
-                    yum install -y devtoolset-9 git wget build-essential clang flex bison patch glibc-static glibc-devel libzstd-devel libmpc cpp llvm-toolset-7 rh-perl530-perl cmake3 zlib-devel ccache lcov python-devel python3-devel
+                    yum install -y devtoolset-9 git wget build-essential clang
+
+            -   uses: actions/checkout@v3
+                with:
+                    fetch-depth: 5
                     
 
             -   name: Compile solc
                 run: |
-                    tree /__w
-                    cd /__w/solidity/
                     git log
-                    . /opt/rh/devtoolset-9/enable
+                    source /opt/rh/devtoolset-9/enable
                     mkdir build && cd build
                     cmake -DCMAKE_BUILD_TYPE=Release -DUSE_Z3=OFF ..
                     make -j2
@@ -249,3 +249,44 @@ jobs:
                     asset_name: solc-linux-x86-gm
                     tag: ${{ github.ref }}
                     overwrite: true
+
+    compile_arm_linux_release:
+        name: upload standard binary of arm linux
+        runs-on: ubuntu-20.04
+        strategy:
+            matrix:
+              include:
+                - arch: aarch64
+
+        steps:
+            -   name: Setup cmake
+                uses: jwlawson/actions-setup-cmake@v1.14
+                with:
+                    cmake-version: '3.15.2'
+
+            -   name: Configure
+                run: |
+                    apt-get update
+                    apt-get install -y build-essential clang git wget
+
+            -   uses: actions/checkout@v3
+                with:
+                    fetch-depth: 5
+
+            - name: Compile solc
+              uses: uraimo/run-on-arch-action@v2
+              with:
+                arch: ${{ matrix.arch }}
+                distro: ubuntu20.04
+                githubToken: ${{ github.token }}
+                run: |
+                    git log -1
+                    mkdir build && cd build
+                    cmake -DCMAKE_BUILD_TYPE=Release -DUSE_Z3=OFF ..
+                    make -j2
+
+            - name: Store binary
+                run: |
+                    ./build/solc/solc --version
+                    mkdir bin
+                    mv build/solc/solc bin/
