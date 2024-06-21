@@ -273,19 +273,19 @@ jobs:
                 with:
                     fetch-depth: 5
 
-            - name: Compile solc
-              uses: uraimo/run-on-arch-action@v2
-              with:
-                arch: ${{ matrix.arch }}
-                distro: ubuntu20.04
-                githubToken: ${{ github.token }}
-                run: |
-                    git log -1
-                    mkdir build && cd build
-                    cmake -DCMAKE_BUILD_TYPE=Release -DUSE_Z3=OFF ..
-                    make -j2
+            -   name: Compile solc
+                uses: uraimo/run-on-arch-action@v2
+                with:
+                    arch: ${{ matrix.arch }}
+                    distro: ubuntu20.04
+                    githubToken: ${{ github.token }}
+                    run: |
+                        git log -1
+                        mkdir build && cd build
+                        cmake -DCMAKE_BUILD_TYPE=Release -DUSE_Z3=OFF ..
+                        make -j2
 
-            - name: Store binary
+            -   name: Store binary
                 run: |
                     ./build/solc/solc --version
                     mkdir bin
