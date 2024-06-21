@@ -183,7 +183,7 @@ jobs:
                     tag: ${{ github.ref }}
 
 
-    compile_linux_x86_release:
+    compile_centos_release:
         name: upload standard binary of Linux x86
         runs-on: ubuntu-20.04
         container: docker.io/centos:7
@@ -200,9 +200,9 @@ jobs:
 
             -   name: Configure
                 run: |
-                    yum install -y epel-release centos-release-scl wget 
+                    yum install -y epel-release centos-release-scl 
                     yum update -y
-                    yum install -y devtoolset-9 git 
+                    yum install -y devtoolset-9 git wget build-essential clang flex bison patch glibc-static glibc-devel libzstd-devel libmpc cpp 
                     
 
             -   name: Compile solc
