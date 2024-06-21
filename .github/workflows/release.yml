@@ -184,14 +184,14 @@ jobs:
 
 
     compile_centos_release:
-        name: upload standard binary of Linux x86
+        name: upload standard binary of centos
         runs-on: ubuntu-20.04
         container: docker.io/centos:7
 
         steps:
             -   uses: actions/checkout@v3
                 with:
-                    fetch-depth: 5
+                    path: /root/solidity
 
             -   name: Setup cmake
                 uses: jwlawson/actions-setup-cmake@v1.14
@@ -207,7 +207,7 @@ jobs:
 
             -   name: Compile solc
                 run: |
-                    pwd
+                    cd /root/solidity/
                     git log
                     . /opt/rh/devtoolset-9/enable
                     mkdir build && cd build
