@@ -150,7 +150,7 @@ jobs:
                     mkdir bin
                     move build\solc\Release\solc.exe bin\
                     cd bin
-                    zip -r solc-win.zip solc.exe
+                    7z a solc-win.zip solc.exe
 
             -   name: Compile GM solc
                 run: |
@@ -163,7 +163,7 @@ jobs:
                     build\solc\Release\solc.exe --version
                     move build\solc\Release\solc.exe bin\solc-gm.exe
                     cd bin
-                    zip -r solc-win-gm.zip solc-gm.exe
+                    7z a solc-win-gm.zip solc-gm.exe
 
             -   name: Upload solc binaries to release
                 uses: svenstaro/upload-release-action@v1-release
@@ -202,11 +202,13 @@ jobs:
                 run: |
                     yum install -y epel-release centos-release-scl 
                     yum update -y
-                    yum install -y devtoolset-9 git wget build-essential clang flex bison patch glibc-static glibc-devel libzstd-devel libmpc cpp 
+                    yum install -y devtoolset-9 git wget build-essential clang flex bison patch glibc-static glibc-devel libzstd-devel libmpc cpp llvm-toolset-7 rh-perl530-perl cmake3 zlib-devel ccache lcov python-devel python3-devel
                     
 
             -   name: Compile solc
                 run: |
+                    pwd
+                    git log
                     . /opt/rh/devtoolset-9/enable
                     mkdir build && cd build
                     cmake -DCMAKE_BUILD_TYPE=Release -DUSE_Z3=OFF ..
