@@ -136,13 +136,12 @@ jobs:
             -   name: Add msbuild to PATH
                 uses: microsoft/setup-msbuild@v2
 
-
             -   name: Configure and Compile solc
                 run: |
                     mkdir build
                     cd build
-                    cmake -G "Visual Studio 16 2019" -DUSE_Z3=OFF ..
-                    msbuild solidity.sln /p:Configuration=Release
+                    cmake -G "Visual Studio 16 2019" ..
+                    cmake --build . --config Release
 
             -   name: Store binary
                 run: |
@@ -155,8 +154,8 @@ jobs:
             -   name: Compile GM solc
                 run: |
                     cd build
-                    cmake -G "Visual Studio 16 2019" -DUSE_Z3=OFF -DBUILD_GM=ON ..
-                    cmake --build . -j 10 --target install --config Release
+                    cmake -G "Visual Studio 16 2019" -DBUILD_GM=ON ..
+                    cmake --build . --config Release
 
             -   name: Store GM binary
                 run: |
@@ -187,107 +186,60 @@ jobs:
         name: upload standard binary of centos
         runs-on: ubuntu-20.04
         container:
-            image: docker.io/centos:7
-            volumes:
-                - /__w/solidity:/__w/solidity/
-
+            image: centos:7
         steps:
-            -   name: Setup cmake
-                uses: jwlawson/actions-setup-cmake@v1.14
-                with:
-                    cmake-version: '3.15.2'
+            - name: Install dependencies
+              run: |
+                  yum install -y cmake3 gcc-c++ gmp-devel jsoncpp-devel leveldb-devel libcurl-devel lz4-devel ncurses-devel openssl-devel python3 wget
+                  yum install -y centos-release-scl
+                  yum install -y devtoolset-9
+                  scl enable devtoolset-9 bash
 
-            -   name: Configure
-                run: |
-                    yum install -y epel-release centos-release-scl 
-                    yum update -y
-                    yum install -y devtoolset-9 git wget build-essential clang
+            - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 5
 
-            -   uses: actions/checkout@v3
-                with:
+            - name: Configure and Compile solc
+              run: |
+                  mkdir build
+                  cd build
+                  cmake3 -DCMAKE_BUILD_TYPE=Release -DUSE_Z3=OFF ..
+                  make -j2
 
-                    fetch-depth: 5
-                    
+            - name: Store binary
+              run: |
+                  build/solc/solc --version
+                  mkdir bin
+                  cp build/solc/solc bin/
+                  cd bin
+                  zip solc-centos-arm64.zip solc
 
-            -   name: Compile solc
-                run: |
-                    pwd
-                    cd .. && git log -1
-                    git log
-                    source /opt/rh/devtoolset-9/enable
-                    mkdir build && cd build
-                    cmake -DCMAKE_BUILD_TYPE=Release -DUSE_Z3=OFF ..
-                    make -j2
+            - name: Compile GM solc
+              run: |
+                  cd build
+                  cmake3 -DCMAKE_BUILD_TYPE=Release -DUSE_Z3=OFF -DBUILD_GM=ON ..
+                  make -j10 install
 
-            -   name: Store binary
-                run: |
-                    ./build/solc/solc --version
-                    mkdir bin
-                    mv build/solc/solc bin/
+            - name: Store GM binary
+              run: |
+                  build/solc/solc --version
+                  cp build/solc/solc bin/solc-gm
+                  cd bin
+                  zip solc-centos-arm64-gm.zip solc-gm
 
-            -   name: Compile GM solc
-                run: |
-                    cd build
-                    cmake -DBUILD_GM=ON -DUSE_Z3=OFF ..
-                    make -j2
+            - name: Upload solc binaries to release
+              uses: svenstaro/upload-release-action@v1-release
+              with:
+                  repo_token: ${{ secrets.GITHUB_TOKEN }}
+                  file: bin/solc-centos-arm64.zip
+                  asset_name: solc-centos-arm64.zip
+                  tag: ${{ github.ref }}
+                  overwrite: true
 
-            -   name: Store GM binary
-                run: |
-                    ./build/solc/solc --version
-                    mv build/solc/solc bin/solc-gm
-
-            -   name: Upload solc binaries to release
-                uses: svenstaro/upload-release-action@v1-release
-                with:
-                    repo_token: ${{ secrets.GITHUB_TOKEN }}
-                    file: bin/solc
-                    asset_name: solc-linux-x86
-                    tag: ${{ github.ref }}
-                    overwrite: true
-
-            -   name: Upload GM solc binaries to release
-                uses: svenstaro/upload-release-action@v1-release
-                with:
-                    repo_token: ${{ secrets.GITHUB_TOKEN }}
-                    file: bin/solc-gm
-                    asset_name: solc-linux-x86-gm
-                    tag: ${{ github.ref }}
-                    overwrite: true
-
-    compile_arm_linux_release:
-        name: upload standard binary of arm linux
-        runs-on: ubuntu-20.04
-        strategy:
-            matrix:
-              include:
-                - arch: aarch64
-
-        steps:
-            -   name: Setup cmake
-                uses: jwlawson/actions-setup-cmake@v1.14
-                with:
-                    cmake-version: '3.15.2'
-
-            -   uses: actions/checkout@v3
-                with:
-                    fetch-depth: 5
-
-            -   name: Compile solc
-                uses: uraimo/run-on-arch-action@v2
-                with:
-                    arch: ${{ matrix.arch }}
-                    distro: ubuntu20.04
-                    githubToken: ${{ github.token }}
-                    run: |
-                        apt-get update -q -y
-                        apt-get install -y build-essential clang git wget cmake
-                        git log -1
-                        mkdir build && cd build
-                        cmake -DCMAKE_BUILD_TYPE=Release -DUSE_Z3=OFF ..
-                        make -j2
-
-            -   name: Store binary
-                run: |
-                    ./build/solc/solc --version
-                    mkdir bin
-                    mv build/solc/solc bin/
+            - name: Upload GM solc binaries to release
+              uses: svenstaro/upload-release-action@v1-release
+              with:
+                  repo_token: ${{ secrets.GITHUB_TOKEN }}
+                  file: bin/solc-centos-arm64-gm.zip
+                  asset_name: solc-centos-arm64-gm.zip
+                  tag: ${{ github.ref }}
